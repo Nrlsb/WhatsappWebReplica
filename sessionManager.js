@@ -353,49 +353,50 @@ class SessionManager {
         try {
             let chats = await client.getChats();
 
-            // Sort chats by timestamp descending (newest first) to prioritize active chats
+            // Sort chats by timestamp descending (newest first)
             chats.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
             const totalChats = chats.length;
             const CHATS_TO_SYNC_MESSAGES = 20; // Only sync full message history for the top 20 chats
 
+            // --- Step 1: Sync Chat List (Batched & Parallel) ---
+            console.log(`Processing ${totalChats} chats metadata...`);
+
+            const CHAT_BATCH_SIZE = 10; // Process 10 chats in parallel for metadata
+            const chatsToUpsert = [];
             let errorCount = 0;
-            for (let i = 0; i < totalChats; i++) {
-                const chat = chats[i];
+
+            // Helper to process a single chat's metadata
+            const processChatMetadata = async (chat) => {
                 try {
                     let contactName = chat.name || chat.id.user;
                     let profilePicUrl = null;
 
+                    // 1. Get Contact Name
                     try {
                         const contact = await chat.getContact();
                         contactName = contact.name || contact.pushname || contactName;
                     } catch (contactErr) {
-                        // Suppress individual contact errors to avoid console spam
-                        // Ignore specific WWebJS internal error that happens on some contacts
                         if (!contactErr.message.includes('getIsMyContact')) {
-                            console.warn(`Error fetching contact details for ${contactName}:`, contactErr.message);
+                            // console.warn(`Error fetching contact details for ${contactName}:`, contactErr.message);
                         }
                     }
 
+                    // 2. Get Profile Pic (with timeout)
                     try {
-                        // Fetch profile picture
-                        // Use client.getProfilePicUrl directly to avoid contact object errors
-                        // Add 5s timeout to prevent hanging
                         profilePicUrl = await this.promiseWithTimeout(
                             client.getProfilePicUrl(chat.id._serialized),
-                            5000,
+                            5000, // 5s timeout
                             'Profile pic fetch timed out'
                         );
-                        console.log(`Profile pic for ${contactName} (${chat.id._serialized}): ${profilePicUrl}`);
                     } catch (picErr) {
-                        console.warn(`Error fetching profile pic for ${contactName}:`, picErr.message);
+                        // console.warn(`Error fetching profile pic for ${contactName}:`, picErr.message);
                         errorCount++;
                     }
 
                     const timestamp = chat.timestamp ? chat.timestamp * 1000 : Date.now();
 
-                    // Upsert chat
-                    const { error: upsertError } = await supabase.from('chats').upsert({
+                    return {
                         id: chat.id._serialized,
                         session_id: sessionId,
                         contact_name: contactName,
@@ -403,95 +404,119 @@ class SessionManager {
                         timestamp: timestamp,
                         profile_pic_url: profilePicUrl,
                         unread_count: chat.unreadCount
-                    });
+                    };
+                } catch (err) {
+                    console.error(`Error processing chat metadata for ${chat.id._serialized}:`, err);
+                    return null;
+                }
+            };
 
-                    if (upsertError) {
-                        console.error(`Error upserting chat ${contactName}:`, upsertError.message);
-                    } else {
-                        // console.log(`Chat ${contactName} updated/inserted`);
-                    }
+            // Process chats in chunks to avoid overwhelming the client
+            for (let i = 0; i < totalChats; i += CHAT_BATCH_SIZE) {
+                const batch = chats.slice(i, i + CHAT_BATCH_SIZE);
+                const results = await Promise.all(batch.map(chat => processChatMetadata(chat)));
 
-                    // Sync messages only for the most recent chats to speed up startup
-                    if (i < CHATS_TO_SYNC_MESSAGES) {
-                        try {
-                            // Add 10s timeout for message fetching
-                            const messages = await this.promiseWithTimeout(
-                                chat.fetchMessages({ limit: 20 }),
-                                10000,
-                                'Message fetch timed out'
-                            );
-                            const messagesToInsert = await Promise.all(messages.map(async (msg) => {
-                                let participantId = null;
-                                let senderName = msg.fromMe ? 'Me' : contactName;
+                // Filter out nulls and add to upsert list
+                results.forEach(res => {
+                    if (res) chatsToUpsert.push(res);
+                });
 
-                                if (chat.isGroup && !msg.fromMe) {
-                                    participantId = msg.author;
-                                    try {
-                                        // We might need to fetch contact here if not cached, but for sync speed we might skip or try
-                                        // For now, let's try to get basic info from the ID or if we can fetch contact cheaply
-                                        // client.getContactById might be slow in a loop.
-                                        // Let's use a simple formatting for now or try to fetch if critical.
-                                        // To avoid slowing down sync too much, we might just use the ID or try to fetch.
-                                        // Let's try to fetch but handle errors/timeouts.
-                                        const contact = await client.getContactById(participantId);
-                                        senderName = contact.name || contact.pushname || participantId.split('@')[0];
-                                        if (!contact.name && contact.pushname) {
-                                            senderName = `+${participantId.split('@')[0]} ~${contact.pushname}`;
-                                        } else if (!contact.name) {
-                                            senderName = `+${participantId.split('@')[0]}`;
-                                        }
-                                    } catch (e) {
-                                        senderName = participantId ? participantId.split('@')[0] : 'Unknown';
-                                    }
-                                }
+                // Optional: Emit progress for UI
+                const percent = Math.round(((i + batch.length) / totalChats) * 50); // First 50% is chat list
+                this.io.to(sessionId).emit('sync-progress', {
+                    current: i + batch.length,
+                    total: totalChats,
+                    percent: percent,
+                    status: 'Syncing chat list...'
+                });
+            }
 
-                                return {
-                                    chat_id: chat.id._serialized,
-                                    whatsapp_id: msg.id._serialized, // Unique ID from WhatsApp
-                                    body: msg.body,
-                                    from_me: msg.fromMe,
-                                    sender_name: senderName,
-                                    timestamp: msg.timestamp * 1000,
-                                    media_url: null, // We'd need to process media for history too, but for now null
-                                    media_type: msg.type,
-                                    caption: msg.body,
-                                    ack: msg.ack,
-                                    participant_id: participantId
-                                };
-                            }));
-
-                            if (messagesToInsert.length > 0) {
-                                // Use upsert to prevent duplicates based on whatsapp_id (requires unique constraint)
-                                const { error } = await supabase.from('messages').upsert(messagesToInsert, { onConflict: 'whatsapp_id', ignoreDuplicates: true });
-                                if (error) {
-                                    // console.warn('Error inserting messages:', error.message);
-                                }
-                            }
-                        } catch (msgErr) {
-                            console.warn(`Could not fetch messages for ${chat.id._serialized}: ${msgErr.message}`);
-                        }
-                    }
-
-                    // Emit progress every 5 chats or on the last one
-                    if ((i + 1) % 5 === 0 || i === totalChats - 1) {
-                        const percent = Math.round(((i + 1) / totalChats) * 100);
-                        this.io.to(sessionId).emit('sync-progress', {
-                            current: i + 1,
-                            total: totalChats,
-                            percent: percent
-                        });
-                        // Also log to terminal every 10 chats
-                        if ((i + 1) % 10 === 0 || i === totalChats - 1) {
-                            console.log(`Syncing... ${i + 1}/${totalChats} (${percent}%)`);
-                        }
-                    }
-
-                } catch (chatErr) {
-                    console.error(`Error processing chat ${chat.id._serialized}:`, chatErr);
+            // Bulk Upsert Chats
+            if (chatsToUpsert.length > 0) {
+                const { error: upsertError } = await supabase.from('chats').upsert(chatsToUpsert);
+                if (upsertError) {
+                    console.error('Error bulk upserting chats:', upsertError.message);
+                } else {
+                    console.log(`Successfully synced ${chatsToUpsert.length} chats metadata.`);
                 }
             }
-            console.log(`Synced ${chats.length} chats for session ${sessionId}. (Errors fetching details: ${errorCount})`);
+
+            // Notify frontend that chat list is ready (so they can see the list while messages load)
             this.io.to(sessionId).emit('chats-synced');
+
+
+            // --- Step 2: Sync Messages (Batched & Parallel) ---
+            console.log(`Syncing messages for top ${CHATS_TO_SYNC_MESSAGES} chats...`);
+
+            const MESSAGE_CHAT_BATCH_SIZE = 5; // Process messages for 5 chats in parallel
+            const chatsToSyncMessages = chats.slice(0, CHATS_TO_SYNC_MESSAGES);
+
+            for (let i = 0; i < chatsToSyncMessages.length; i += MESSAGE_CHAT_BATCH_SIZE) {
+                const batch = chatsToSyncMessages.slice(i, i + MESSAGE_CHAT_BATCH_SIZE);
+                let allMessagesToInsert = [];
+
+                await Promise.all(batch.map(async (chat) => {
+                    try {
+                        const messages = await this.promiseWithTimeout(
+                            chat.fetchMessages({ limit: 20 }),
+                            10000,
+                            'Message fetch timed out'
+                        );
+
+                        const mappedMessages = await Promise.all(messages.map(async (msg) => {
+                            let participantId = null;
+                            let senderName = msg.fromMe ? 'Me' : (chat.name || chat.id.user); // Default to chat name
+
+                            if (chat.isGroup && !msg.fromMe) {
+                                participantId = msg.author;
+                                // Try to get sender name from cached contact or ID
+                                // Optimization: Skip heavy contact fetch here for speed, or use simple cache if available
+                                senderName = participantId ? participantId.split('@')[0] : 'Unknown';
+                            }
+
+                            return {
+                                chat_id: chat.id._serialized,
+                                whatsapp_id: msg.id._serialized,
+                                body: msg.body,
+                                from_me: msg.fromMe,
+                                sender_name: senderName,
+                                timestamp: msg.timestamp * 1000,
+                                media_url: null,
+                                media_type: msg.type,
+                                caption: msg.body,
+                                ack: msg.ack,
+                                participant_id: participantId
+                            };
+                        }));
+
+                        allMessagesToInsert = allMessagesToInsert.concat(mappedMessages);
+
+                    } catch (msgErr) {
+                        console.warn(`Could not fetch messages for ${chat.id._serialized}: ${msgErr.message}`);
+                    }
+                }));
+
+                // Bulk Upsert Messages for this batch
+                if (allMessagesToInsert.length > 0) {
+                    const { error } = await supabase.from('messages').upsert(allMessagesToInsert, { onConflict: 'whatsapp_id', ignoreDuplicates: true });
+                    if (error) {
+                        console.warn('Error bulk inserting messages:', error.message);
+                    }
+                }
+
+                // Emit progress
+                const currentCount = i + batch.length;
+                const percent = 50 + Math.round((currentCount / CHATS_TO_SYNC_MESSAGES) * 50); // Remaining 50%
+                this.io.to(sessionId).emit('sync-progress', {
+                    current: currentCount,
+                    total: CHATS_TO_SYNC_MESSAGES,
+                    percent: percent,
+                    status: 'Syncing messages...'
+                });
+            }
+
+            console.log(`Sync completed for session ${sessionId}.`);
+            this.io.to(sessionId).emit('sync-complete'); // New event to indicate full completion
 
         } catch (err) {
             console.error(`Error syncing chats for session ${sessionId}:`, err);

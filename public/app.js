@@ -25,6 +25,16 @@ newChatBtn.addEventListener('click', () => {
     }
 });
 
+// Check for saved session on load
+window.addEventListener('load', () => {
+    const savedSessionId = localStorage.getItem('whatsapp_session_id');
+    if (savedSessionId) {
+        console.log('Found saved session:', savedSessionId);
+        document.getElementById('session-id-input').value = savedSessionId;
+        joinSession();
+    }
+});
+
 // Initialize Sync Button
 if (syncBtn) {
     syncBtn.addEventListener('click', () => {
@@ -55,6 +65,7 @@ const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
         if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('whatsapp_session_id'); // Clear saved session
             socket.emit('logout', currentSessionId);
         }
     });
@@ -71,6 +82,7 @@ socket.on('status', (status) => {
         chats = {};
         contactList.innerHTML = '';
         chatMessages.innerHTML = '';
+        localStorage.removeItem('whatsapp_session_id'); // Ensure it's cleared
         alert('Session disconnected');
     }
 });
@@ -122,6 +134,7 @@ function joinSession() {
     }
 
     currentSessionId = sessionId;
+    localStorage.setItem('whatsapp_session_id', sessionId); // Save session
 
     loginContainer.style.display = 'none';
     appContainer.style.display = 'flex';
