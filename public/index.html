@@ -22,6 +22,9 @@
 
     <!-- Main App -->
     <div id="app-container" style="display: none;">
+        <div id="network-error-banner" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i> Computadora sin conexión
+        </div>
 
         <!-- Vertical Nav Bar -->
         <div id="nav-bar">
@@ -204,9 +207,23 @@
         </div>
     </div>
 
+
+    <!-- Custom Modal -->
+    <div id="custom-modal-overlay">
+        <div class="custom-modal">
+            <h3 id="custom-modal-title">Title</h3>
+            <p id="custom-modal-message">Message</p>
+            <div class="modal-buttons">
+                <button id="custom-modal-cancel" class="modal-btn cancel">Cancel</button>
+                <button id="custom-modal-confirm" class="modal-btn confirm">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>
