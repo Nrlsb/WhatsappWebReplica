@@ -152,7 +152,19 @@
                 </div>
 
                 <div id="chat-footer">
-                    <i class="far fa-smile"></i>
+                    <!-- Reply Preview -->
+                    <div id="reply-preview" style="display: none;">
+                        <div class="reply-content">
+                            <span class="reply-sender">Sender Name</span>
+                            <span class="reply-text">Message text...</span>
+                        </div>
+                        <i class="fas fa-times close-reply" onclick="cancelReply()"></i>
+                    </div>
+
+                    <!-- Emoji Picker Container -->
+                    <div id="emoji-picker-container" style="display: none;"></div>
+
+                    <i class="far fa-smile" id="emoji-btn" style="cursor: pointer;"></i>
                     <label for="file-input">
                         <i class="fas fa-plus"
                             style="cursor: pointer; margin: 0 10px; color: var(--secondary-text);"></i>
@@ -175,6 +187,24 @@
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div id="context-menu" style="display: none;">
+        <div class="menu-item" onclick="handleContextAction('reply')">Responder</div>
+        <div class="menu-item" onclick="handleContextAction('forward')">Reenviar</div>
+        <div class="menu-item" onclick="handleContextAction('info')">Info. del mensaje</div>
+        <div class="menu-item delete" onclick="handleContextAction('delete')">Eliminar</div>
+    </div>
+
+    <!-- Media Lightbox -->
+    <div id="media-lightbox" style="display: none;">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" style="display: none;">
+            <video id="lightbox-video" controls style="display: none;"></video>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/picmo@latest/dist/umd/index.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
 </body>

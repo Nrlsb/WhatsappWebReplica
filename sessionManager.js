@@ -257,7 +257,7 @@ class SessionManager {
         }
     }
 
-    async sendMessage(sessionId, to, message, media = null) {
+    async sendMessage(sessionId, to, message, media = null, quotedMessageId = null) {
         const session = this.sessions.get(sessionId);
         if (session && session.ready) {
             try {
@@ -269,7 +269,7 @@ class SessionManager {
                 if (media) {
                     const { MessageMedia } = require('whatsapp-web.js');
                     const msgMedia = new MessageMedia(media.mimetype, media.data, media.filename);
-                    sentMsg = await session.client.sendMessage(to, msgMedia, { caption: message });
+                    sentMsg = await session.client.sendMessage(to, msgMedia, { caption: message, quotedMessageId });
 
                     // For outgoing media, we assume it's already uploaded or we upload it here
                     // For simplicity, let's assume media.url is provided if it's already uploaded
@@ -307,7 +307,7 @@ class SessionManager {
                             media.mimetype.startsWith('video') ? 'video' : 'document';
 
                 } else {
-                    sentMsg = await session.client.sendMessage(to, message);
+                    sentMsg = await session.client.sendMessage(to, message, { quotedMessageId });
                 }
 
                 // Determine final caption for DB

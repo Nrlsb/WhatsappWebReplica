@@ -51,9 +51,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send-message', async (data) => {
-        const { sessionId, to, message, media } = data;
+        const { sessionId, to, message, media, quotedMessageId } = data;
         if (sessionId && to && (message || media)) {
-            const success = await sessionManager.sendMessage(sessionId, to, message, media);
+            const success = await sessionManager.sendMessage(sessionId, to, message, media, quotedMessageId);
             if (success) {
                 console.log(`Message sent in session ${sessionId} to ${to}`);
             } else {

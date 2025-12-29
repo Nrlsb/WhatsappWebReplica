@@ -463,22 +463,210 @@ body {
     justify-content: flex-end;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.6);
-    margin-top: 4px;
-    margin-left: 10px;
+    margin: 0 10px;
+    cursor: pointer;
 }
 
-/* Chat Footer */
 #chat-footer {
-    min-height: 62px;
     background: var(--header-background);
     padding: 5px 16px;
     display: flex;
     align-items: center;
+    position: relative;
+    min-height: 62px;
     box-sizing: border-box;
 }
 
-#chat-footer i {
-    color: var(--secondary-text);
+.input-container {
+    flex: 1;
+    background: var(--input-background);
+    border-radius: 8px;
+    padding: 9px 12px;
+    margin: 5px 10px;
+    display: flex;
+    align-items: center;
+}
+
+#chat-footer input[type="text"] {
+    flex: 1;
+    padding: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    color: var(--primary-text);
+    font-size: 15px;
+    margin: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+/* QR Overlay */
+#qr-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--app-background);
+    color: var(--primary-text);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#qr-overlay>p {
+    display: none;
+}
+
+.qr-container {
+    display: flex;
+    background: var(--header-background);
+    /* Dark background */
+    color: var(--primary-text);
+    border-radius: 3px;
+    box-shadow: 0 17px 50px 0 rgba(0, 0, 0, .19), 0 12px 15px 0 rgba(0, 0, 0, .24);
+    padding: 50px;
+    max-width: 900px;
+    width: 80%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    border: 1px solid var(--border-color);
+}
+
+.qr-instructions {
+    flex: 1;
+}
+
+.qr-instructions h2 {
+    font-weight: 300;
+    font-size: 28px;
+    margin-bottom: 30px;
+    color: var(--primary-text);
+}
+
+.qr-instructions ol {
+    padding-left: 20px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--primary-text);
+}
+
+.qr-instructions li {
+    margin-bottom: 15px;
+}
+
+.qr-instructions strong {
+    font-weight: 600;
+    color: var(--primary-text);
+}
+
+.qr-code-wrapper {
+    flex: 0 0 auto;
+    position: relative;
+    background: white;
+    /* Keep white for QR contrast */
+    padding: 10px;
+    border-radius: 8px;
+}
+
+#qr-code {
+    width: 264px;
+    height: 264px;
+    display: block;
+}
+
+.qr-retry {
+    display: none;
+}
+
+/* Context Menu */
+#context-menu {
+    position: absolute;
+    background: #233138;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .26), 0 2px 10px 0 rgba(0, 0, 0, .16);
+    z-index: 1000;
+    min-width: 200px;
+    padding: 4px 0;
+}
+
+.menu-item {
+    padding: 10px 24px;
+    cursor: pointer;
+    color: var(--primary-text);
+    font-size: 14.5px;
+}
+
+.menu-item:hover {
+    background: #182229;
+}
+
+.menu-item.delete {
+    color: #f15c6d;
+}
+
+/* Lightbox */
+#media-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(11, 20, 26, 0.95);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.lightbox-content img,
+.lightbox-content video {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #fff;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 2001;
+}
+
+/* Drag & Drop Overlay */
+#main-chat.drag-over {
+    border: 2px dashed var(--primary-green);
+    background-color: rgba(0, 168, 132, 0.1);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    font-size: 12px;
+    color: var(--primary-green);
     font-size: 24px;
     margin: 0 10px;
     cursor: pointer;
@@ -601,50 +789,177 @@ body {
     display: none;
 }
 
-/* Contact List Updates */
-.user-avatar {
-    overflow: hidden !important;
+/* Context Menu */
+#context-menu {
+    position: absolute;
+    background: #233138;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, .26), 0 2px 10px 0 rgba(0, 0, 0, .16);
+    z-index: 1000;
+    min-width: 200px;
+    padding: 4px 0;
 }
 
-.avatar-img {
+.menu-item {
+    padding: 10px 24px;
+    cursor: pointer;
+    color: var(--primary-text);
+    font-size: 14.5px;
+}
+
+.menu-item:hover {
+    background: #182229;
+}
+
+.menu-item.delete {
+    color: #f15c6d;
+}
+
+/* Lightbox */
+#media-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-}
-
-.contact-row-top,
-.contact-row-bottom {
+    background: rgba(11, 20, 26, 0.95);
+    z-index: 2000;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
 }
 
-.contact-time {
-    font-size: 12px;
-    color: var(--secondary-text);
-    margin-left: 6px;
-    flex-shrink: 0;
+.lightbox-content {
+    max-width: 90%;
+    max-height: 90%;
 }
 
-.unread-badge {
-    background-color: var(--primary-green);
-    color: #111b21;
+.lightbox-content img,
+.lightbox-content video {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.close-lightbox {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: #fff;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 2001;
+}
+
+/* Drag & Drop Overlay */
+#main-chat.drag-over {
+    border: 2px dashed var(--primary-green);
+    background-color: rgba(0, 168, 132, 0.1);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    font-size: 12px;
+    color: var(--primary-green);
+    font-weight: bold;
+    margin-top: 2px;
+    animation: pulse 1.5s infinite;
+}
+
+/* Reply Preview */
+#reply-preview {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    background: #202c33;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+.reply-content {
+    background: #1d282f;
+    border-left: 4px solid var(--primary-green);
+    padding: 5px 10px;
+    border-radius: 4px;
+    flex: 1;
+    margin-right: 15px;
+}
+
+.reply-sender {
+    display: block;
+    color: var(--primary-green);
     font-size: 12px;
     font-weight: bold;
-    border-radius: 50%;
-    min-width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 6px;
-    flex-shrink: 0;
-    padding: 0 4px;
-    /* Add some padding for double digits */
+    margin-bottom: 2px;
 }
 
-/* Adjust contact status to take available space */
-.contact-status {
-    flex: 1;
-    margin-right: 10px;
+.reply-text {
+    display: block;
+    color: var(--secondary-text);
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.close-reply {
+    color: var(--secondary-text);
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Quoted Message in Chat */
+.quoted-message {
+    background: rgba(0, 0, 0, 0.1);
+    border-left: 4px solid var(--primary-green);
+    padding: 5px 10px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+.quoted-sender {
+    display: block;
+    color: var(--primary-green);
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.quoted-text {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Emoji Picker Container */
+#emoji-picker-container {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    z-index: 100;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
 }
