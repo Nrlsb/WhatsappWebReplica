@@ -49,6 +49,18 @@ export function initializeSocket() {
         }
     });
 
+    socket.on('auth-failure', (msg) => {
+        console.error('Auth failure:', msg);
+        showModal('Authentication Failed', `Could not connect: ${msg}`);
+
+        // Reset UI
+        appContainer.style.display = 'none';
+        loginContainer.style.display = 'block';
+        qrOverlay.style.display = 'none';
+        setState('currentSessionId', null);
+        localStorage.removeItem('whatsapp_session_id');
+    });
+
     socket.on('sync-progress', (data) => {
         if (syncStatusDiv) {
             syncStatusDiv.style.display = 'block';

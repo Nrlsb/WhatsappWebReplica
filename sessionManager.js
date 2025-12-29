@@ -55,6 +55,12 @@ class SessionManager {
             });
         });
 
+        client.on('auth_failure', msg => {
+            console.error('AUTHENTICATION FAILURE', msg);
+            this.io.to(sessionId).emit('status', 'Authentication failed');
+            this.io.to(sessionId).emit('auth-failure', msg);
+        });
+
         client.on('ready', async () => {
             sessionData.ready = true;
             this.io.to(sessionId).emit('ready', 'WhatsApp is connected');
