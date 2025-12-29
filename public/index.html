@@ -26,31 +26,28 @@
         <!-- Vertical Nav Bar -->
         <div id="nav-bar">
             <div class="nav-top">
-                <div class="nav-item active">
+                <div class="nav-item active" title="Chats">
                     <i class="fas fa-comment-alt"></i>
                 </div>
-                <div class="nav-item">
-                    <i class="fas fa-phone-alt"></i>
-                </div>
-                <div class="nav-item">
+                <div class="nav-item" title="Status">
                     <i class="fas fa-circle-notch"></i>
+                </div>
+                <div class="nav-item" title="Channels">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div class="nav-item" title="Communities">
+                    <i class="fas fa-users"></i>
                 </div>
             </div>
             <div class="nav-bottom">
-                <div class="nav-item">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="nav-item">
-                    <i class="fas fa-archive"></i>
-                </div>
-                <div class="nav-item">
+                <div class="nav-item" title="Settings">
                     <i class="fas fa-cog"></i>
                 </div>
-                <div class="nav-item" id="logout-btn" title="Logout">
+                <div class="nav-item" id="logout-btn" title="Cerrar Sesión">
                     <i class="fas fa-sign-out-alt" style="color: #ff5f5f;"></i>
                 </div>
-                <div class="nav-item">
-                    <div class="user-avatar" style="width: 24px; height: 24px; font-size: 12px;">
+                <div class="nav-item" title="Profile">
+                    <div class="user-avatar small-avatar">
                         <i class="fas fa-user"></i>
                     </div>
                 </div>
@@ -60,11 +57,12 @@
         <!-- Sidebar -->
         <div id="sidebar">
             <div class="header">
-                <div class="header-title">Chats</div>
+                <div class="header-title">WhatsApp</div>
                 <div class="header-icons">
-                    <i class="fas fa-sync" id="sync-btn" title="Sync Now" style="cursor: pointer; margin-right: 15px;"></i>
-                    <i class="fas fa-edit" title="New Chat" class="new-chat-btn"></i> <!-- Plus icon replacement -->
-                    <i class="fas fa-ellipsis-v"></i>
+                    <i class="fas fa-sync" id="sync-btn" title="Sync Now"
+                        style="cursor: pointer; margin-right: 15px; font-size: 16px;"></i>
+                    <i class="far fa-plus-square" title="New Chat" id="new-chat-btn"></i>
+                    <i class="fas fa-ellipsis-v" title="Menu"></i>
                 </div>
             </div>
 
@@ -97,49 +95,82 @@
 
             <!-- QR Overlay -->
             <div id="qr-overlay" style="display: none;">
-                <h2>Link with your phone</h2>
-                <img id="qr-code" src="" alt="QR Code">
+                <div class="qr-container">
+                    <div class="qr-instructions">
+                        <h2>Usar WhatsApp en tu computadora</h2>
+                        <ol>
+                            <li>Abre WhatsApp en tu teléfono</li>
+                            <li>Toca <strong>Menú</strong> <i class="fas fa-ellipsis-v"></i> o
+                                <strong>Configuración</strong> <i class="fas fa-cog"></i> y selecciona
+                                <strong>Dispositivos vinculados</strong>
+                            </li>
+                            <li>Toca en <strong>Vincular un dispositivo</strong></li>
+                            <li>Apunta tu teléfono a esta pantalla para escanear el código</li>
+                        </ol>
+                    </div>
+                    <div class="qr-code-wrapper">
+                        <img id="qr-code" src="" alt="QR Code">
+                    </div>
+                </div>
                 <p style="margin-top: 20px; color: var(--secondary-text);">Open WhatsApp on your phone > Menu > Linked
                     devices > Link a device</p>
             </div>
 
-            <div class="header" id="chat-header">
-                <div style="display: flex; align-items: center;">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
+            <!-- No Chat Placeholder -->
+            <div id="no-chat-placeholder">
+                <div class="placeholder-content">
+                    <img src="https://static.whatsapp.net/rsrc.php/v3/y6/r/wa669ae.svg" alt="WhatsApp Web" width="320">
+                    <h1>WhatsApp Web</h1>
+                    <p>Envía y recibe mensajes sin necesidad de mantener tu teléfono conectado.<br>
+                        Usa WhatsApp en hasta 4 dispositivos vinculados y 1 teléfono a la vez.</p>
+                    <div class="encryption-note">
+                        <i class="fas fa-lock"></i> Tus mensajes personales están cifrados de extremo a extremo.
                     </div>
-                    <div class="contact-info chat-header-info">
-                        <div class="contact-name" id="chat-title">New Chat</div>
-                        <div class="contact-status">haz clic aquí para ver la información de contacto</div>
-                    </div>
-                </div>
-                <div class="header-icons">
-                    <i class="fas fa-search"></i>
-                    <i class="fas fa-ellipsis-v"></i>
                 </div>
             </div>
 
-            <div id="chat-messages">
-                <!-- Messages will appear here -->
-            </div>
+            <!-- Active Chat View -->
+            <div id="chat-view" style="display: none; flex-direction: column; height: 100%;">
+                <div class="header" id="chat-header">
+                    <div style="display: flex; align-items: center;">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="contact-info chat-header-info">
+                            <div class="contact-name" id="chat-title">New Chat</div>
+                            <div class="contact-status">haz clic aquí para ver la información de contacto</div>
+                        </div>
+                    </div>
+                    <div class="header-icons">
+                        <i class="fas fa-search"></i>
+                        <i class="fas fa-ellipsis-v"></i>
+                    </div>
+                </div>
 
-            <div id="chat-footer">
-                <i class="far fa-smile"></i>
-                <label for="file-input">
-                    <i class="fas fa-paperclip"
-                        style="cursor: pointer; margin-right: 15px; color: var(--icon-color);"></i>
-                </label>
-                <input type="file" id="file-input" style="display: none;">
+                <div id="chat-messages">
+                    <!-- Messages will appear here -->
+                </div>
 
-                <input type="text" id="message-text" placeholder="Escribe un mensaje">
+                <div id="chat-footer">
+                    <i class="far fa-smile"></i>
+                    <label for="file-input">
+                        <i class="fas fa-plus"
+                            style="cursor: pointer; margin: 0 10px; color: var(--secondary-text);"></i>
+                    </label>
+                    <input type="file" id="file-input" style="display: none;">
 
-                <!-- Target Number Input (Hidden) -->
-                <input type="text" id="target-number" placeholder="Number" style="display: none;">
+                    <div class="input-container">
+                        <input type="text" id="message-text" placeholder="Escribe un mensaje">
+                    </div>
 
-                <i class="fas fa-microphone" id="mic-btn"></i>
-                <i class="fas fa-stop" id="stop-btn" style="display: none; color: red;"></i>
-                <i class="fas fa-paper-plane" id="send-btn" style="display: none; color: var(--primary-green);"
-                    onclick="sendMessage()"></i>
+                    <!-- Target Number Input (Hidden) -->
+                    <input type="text" id="target-number" placeholder="Number" style="display: none;">
+
+                    <i class="fas fa-microphone" id="mic-btn"></i>
+                    <i class="fas fa-stop" id="stop-btn" style="display: none; color: red;"></i>
+                    <i class="fas fa-paper-plane" id="send-btn" style="display: none; color: var(--primary-green);"
+                        onclick="sendMessage()"></i>
+                </div>
             </div>
         </div>
     </div>

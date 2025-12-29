@@ -12,7 +12,7 @@ const messageInput = document.getElementById('message-text');
 const contactList = document.getElementById('contact-list');
 const chatTitle = document.getElementById('chat-title');
 const targetNumberInput = document.getElementById('target-number');
-const newChatBtn = document.querySelector('.fa-edit'); // Updated selector for New Chat (Edit icon)
+const newChatBtn = document.getElementById('new-chat-btn'); // Updated ID
 const syncBtn = document.getElementById('sync-btn');
 const sendBtn = document.getElementById('send-btn');
 const micBtn = document.getElementById('mic-btn');
@@ -139,6 +139,10 @@ function joinSession() {
     loginContainer.style.display = 'none';
     appContainer.style.display = 'flex';
 
+    // Ensure placeholder is shown initially
+    document.getElementById('no-chat-placeholder').style.display = 'flex';
+    document.getElementById('chat-view').style.display = 'none';
+
     socket.emit('join-session', sessionId);
 
     // Fetch existing chats
@@ -255,6 +259,11 @@ function sendMessage() {
 
 function selectChat(chatId) {
     currentChatId = chatId;
+
+    // Toggle Views
+    document.getElementById('no-chat-placeholder').style.display = 'none';
+    document.getElementById('chat-view').style.display = 'flex';
+
     const chat = chats[chatId];
 
     // Reset unread count
@@ -435,6 +444,36 @@ messageInput.addEventListener('keypress', function (e) {
         sendMessage();
     }
 });
+
+// Close chat on Esc key
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && currentChatId) {
+        closeChat();
+    }
+});
+
+function closeChat() {
+    currentChatId = null;
+    chatMessages.innerHTML = '';
+    chatTitle.innerText = 'WhatsApp Web'; // Reset title
+
+    // Toggle Views
+    document.getElementById('no-chat-placeholder').style.display = 'flex';
+    document.getElementById('chat-view').style.display = 'none';
+
+    // Reset header avatar
+    const headerAvatar = document.querySelector('#chat-header .user-avatar');
+    if (headerAvatar) {
+        headerAvatar.innerHTML = '<i class="fas fa-user"></i>';
+    }
+
+    // Clear active state in contact list
+    const activeContacts = document.querySelectorAll('.contact-item.active');
+    activeContacts.forEach(el => el.classList.remove('active'));
+
+    // Optional: Hide chat footer or show a placeholder
+    // For now, we just clear the messages and selection
+}
 
 function sendMessage(text = null, media = null) {
     const message = text || messageInput.value;
