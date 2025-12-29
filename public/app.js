@@ -5,7 +5,8 @@ import { selectChat, sendMessage, closeChat, initializeEmojiPicker, initializeSe
 import { showModal } from './modules/uiNotifications.js';
 
 // Initialize Socket
-initializeSocket();
+// Initialize Socket
+// initializeSocket(); // Removed to allow dynamic connection with Session ID
 
 // Global Event Listeners
 const newChatBtn = document.getElementById('new-chat-btn');

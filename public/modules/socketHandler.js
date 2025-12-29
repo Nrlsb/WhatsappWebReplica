@@ -10,8 +10,21 @@ function calculateTotalUnread() {
     return total;
 }
 
-export function initializeSocket() {
-    const { socket } = state;
+export function initializeSocket(sessionId) {
+    if (state.socket && state.socket.connected) {
+        return; // Already connected
+    }
+
+    // Connect with Session ID for sticky sessions
+    // Using window.io explicitly
+    state.socket = window.io({
+        query: { sessionId: sessionId }
+    });
+
+    setupSocketListeners(state.socket);
+}
+
+function setupSocketListeners(socket) {
     const qrOverlay = document.getElementById('qr-overlay');
     const qrImg = document.getElementById('qr-code');
     const appContainer = document.getElementById('app-container');
@@ -46,6 +59,12 @@ export function initializeSocket() {
             localStorage.removeItem('whatsapp_session_id');
             showModal('Disconnected', 'Session disconnected');
             updatePageTitle(0);
+
+            // Disconnect socket to allow reconnection with new session ID later
+            if (state.socket) {
+                state.socket.disconnect();
+                state.socket = null;
+            }
         }
     });
 
@@ -59,6 +78,11 @@ export function initializeSocket() {
         qrOverlay.style.display = 'none';
         setState('currentSessionId', null);
         localStorage.removeItem('whatsapp_session_id');
+
+        if (state.socket) {
+            state.socket.disconnect();
+            state.socket = null;
+        }
     });
 
     socket.on('sync-progress', (data) => {
@@ -179,6 +203,11 @@ export function joinSession(sessionId) {
     document.getElementById('app-container').style.display = 'flex';
     document.getElementById('no-chat-placeholder').style.display = 'flex';
     document.getElementById('chat-view').style.display = 'none';
+
+    // Initialize socket with session ID if not already connected
+    if (!state.socket || !state.socket.connected) {
+        initializeSocket(sessionId);
+    }
 
     state.socket.emit('join-session', sessionId);
 
