@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Login Screen -->
+    <div id="login-container">
+        <h1>WhatsApp Web</h1>
+        <p style="color: var(--secondary-text); margin-bottom: 20px;">Enter your session ID to continue</p>
+        <input type="text" id="session-id-input" placeholder="Session ID (e.g. user1)">
+        <button onclick="joinSession()">Start Messaging</button>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-container" style="display: none;">
+
+        <!-- Vertical Nav Bar -->
+        <div id="nav-bar">
+            <div class="nav-top">
+                <div class="nav-item active">
+                    <i class="fas fa-comment-alt"></i>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-circle-notch"></i>
+                </div>
+            </div>
+            <div class="nav-bottom">
+                <div class="nav-item">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-archive"></i>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="nav-item" id="logout-btn" title="Logout">
+                    <i class="fas fa-sign-out-alt" style="color: #ff5f5f;"></i>
+                </div>
+                <div class="nav-item">
+                    <div class="user-avatar" style="width: 24px; height: 24px; font-size: 12px;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div id="sidebar">
+            <div class="header">
+                <div class="header-title">Chats</div>
+                <div class="header-icons">
+                    <i class="fas fa-sync" id="sync-btn" title="Sync Now" style="cursor: pointer; margin-right: 15px;"></i>
+                    <i class="fas fa-edit" title="New Chat" class="new-chat-btn"></i> <!-- Plus icon replacement -->
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+
+            <div id="sync-status"
+                style="padding: 10px; background: #f0f2f5; font-size: 12px; color: #54656f; display: none; text-align: center; border-bottom: 1px solid #e9edef;">
+                Syncing...
+            </div>
+
+            <div class="search-bar">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar un chat o iniciar uno nuevo">
+                </div>
+            </div>
+
+            <div class="filter-chips">
+                <div class="chip active">Todos</div>
+                <div class="chip">No leídos</div>
+                <div class="chip">Favoritos</div>
+                <div class="chip">Grupos</div>
+            </div>
+
+            <div class="contact-list" id="contact-list">
+                <!-- Dynamic contacts will appear here -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div id="main-chat">
+
+            <!-- QR Overlay -->
+            <div id="qr-overlay" style="display: none;">
+                <h2>Link with your phone</h2>
+                <img id="qr-code" src="" alt="QR Code">
+                <p style="margin-top: 20px; color: var(--secondary-text);">Open WhatsApp on your phone > Menu > Linked
+                    devices > Link a device</p>
+            </div>
+
+            <div class="header" id="chat-header">
+                <div style="display: flex; align-items: center;">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="contact-info chat-header-info">
+                        <div class="contact-name" id="chat-title">New Chat</div>
+                        <div class="contact-status">haz clic aquí para ver la información de contacto</div>
+                    </div>
+                </div>
+                <div class="header-icons">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+
+            <div id="chat-messages">
+                <!-- Messages will appear here -->
+            </div>
+
+            <div id="chat-footer">
+                <i class="far fa-smile"></i>
+                <label for="file-input">
+                    <i class="fas fa-paperclip"
+                        style="cursor: pointer; margin-right: 15px; color: var(--icon-color);"></i>
+                </label>
+                <input type="file" id="file-input" style="display: none;">
+
+                <input type="text" id="message-text" placeholder="Escribe un mensaje">
+
+                <!-- Target Number Input (Hidden) -->
+                <input type="text" id="target-number" placeholder="Number" style="display: none;">
+
+                <i class="fas fa-microphone" id="mic-btn"></i>
+                <i class="fas fa-stop" id="stop-btn" style="display: none; color: red;"></i>
+                <i class="fas fa-paper-plane" id="send-btn" style="display: none; color: var(--primary-green);"
+                    onclick="sendMessage()"></i>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

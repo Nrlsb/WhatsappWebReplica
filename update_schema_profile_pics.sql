@@ -1,0 +1,1 @@
+ALTER TABLE chats ADD COLUMN IF NOT EXISTS profile_pic_url TEXT;
